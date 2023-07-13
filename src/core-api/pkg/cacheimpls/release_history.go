@@ -28,40 +28,44 @@ import (
 	"core/pkg/database/dao"
 )
 
-// ReleaseKey is the key of release
-type ReleaseKey struct {
-	GatewayID int64
-	StageID   int64
+// ReleaseHistoryCacheKey is the key of jwt public key
+type ReleaseHistoryCacheKey struct {
+	ReleaseID int64
 }
 
-// Key return the key string of release
-func (k ReleaseKey) Key() string {
-	return strconv.FormatInt(k.GatewayID, 10) + ":" + strconv.FormatInt(k.StageID, 10)
+// Key return the key string of release history
+func (k ReleaseHistoryCacheKey) Key() string {
+	return strconv.FormatInt(k.ReleaseID, 10)
 }
 
-func retrieveStageByGatewayIDStageID(ctx context.Context, k cache.Key) (interface{}, error) {
-	key := k.(ReleaseKey)
+func retrieveReleaseHistory(ctx context.Context, k cache.Key) (interface{}, error) {
+	key := k.(ReleaseHistoryCacheKey)
 
-	manager := dao.NewReleaseManager()
-	return manager.Get(ctx, key.GatewayID, key.StageID)
+	manager := dao.NewReleaseHistoryManger()
+
+	releaseHistory, err := manager.Get(ctx, key.ReleaseID)
+	if err != nil {
+		return "", err
+	}
+
+	return releaseHistory, nil
 }
 
-// GetRelease will get the release from cache by gatewayID and stageID
-func GetRelease(ctx context.Context, gatewayID, stageID int64) (release dao.Release, err error) {
-	key := ReleaseKey{
-		GatewayID: gatewayID,
-		StageID:   stageID,
+// GetReleaseHistory will get the jwt public key from cache by ReleaseID
+func GetReleaseHistory(ctx context.Context, releaseID int64) (releaseHistory dao.ReleaseHistory, err error) {
+	key := ReleaseHistoryCacheKey{
+		ReleaseID: releaseID,
 	}
 	var value interface{}
-	value, err = cacheGet(ctx, releaseCache, key)
+	value, err = cacheGet(ctx, releaseHistoryCache, key)
 	if err != nil {
 		return
 	}
 
 	var ok bool
-	release, ok = value.(dao.Release)
+	releaseHistory, ok = value.(dao.ReleaseHistory)
 	if !ok {
-		err = errors.New("not dao.Release in cache")
+		err = errors.New("not ReleaseHistory in cache")
 		return
 	}
 	return

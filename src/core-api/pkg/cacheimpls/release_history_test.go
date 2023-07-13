@@ -21,48 +21,45 @@ package cacheimpls
 import (
 	"context"
 	"errors"
-	"strconv"
+	"testing"
+	"time"
 
 	"github.com/TencentBlueKing/gopkg/cache"
+	"github.com/TencentBlueKing/gopkg/cache/memory"
+	"github.com/stretchr/testify/assert"
 
 	"core/pkg/database/dao"
 )
 
-// ReleaseKey is the key of release
-type ReleaseKey struct {
-	GatewayID int64
-	StageID   int64
+func TestReleaseHistoryCacheKey_Key(t *testing.T) {
+	k := ReleaseHistoryCacheKey{
+		ReleaseID: 1,
+	}
+	assert.Equal(t, "1", k.Key())
 }
 
-// Key return the key string of release
-func (k ReleaseKey) Key() string {
-	return strconv.FormatInt(k.GatewayID, 10) + ":" + strconv.FormatInt(k.StageID, 10)
-}
+func TestGetReleaseHistory(t *testing.T) {
+	expiration := 5 * time.Minute
 
-func retrieveStageByGatewayIDStageID(ctx context.Context, k cache.Key) (interface{}, error) {
-	key := k.(ReleaseKey)
-
-	manager := dao.NewReleaseManager()
-	return manager.Get(ctx, key.GatewayID, key.StageID)
-}
-
-// GetRelease will get the release from cache by gatewayID and stageID
-func GetRelease(ctx context.Context, gatewayID, stageID int64) (release dao.Release, err error) {
-	key := ReleaseKey{
-		GatewayID: gatewayID,
-		StageID:   stageID,
+	// valid
+	retrieveFunc := func(ctx context.Context, key cache.Key) (interface{}, error) {
+		return dao.ReleaseHistory{}, nil
 	}
-	var value interface{}
-	value, err = cacheGet(ctx, releaseCache, key)
-	if err != nil {
-		return
-	}
+	mockCache := memory.NewCache(
+		"mockCache", false, retrieveFunc, expiration, nil)
+	releaseHistoryCache = mockCache
 
-	var ok bool
-	release, ok = value.(dao.Release)
-	if !ok {
-		err = errors.New("not dao.Release in cache")
-		return
+	_, err := GetReleaseHistory(context.Background(), 1)
+	assert.NoError(t, err)
+
+	// error
+	retrieveFunc = func(ctx context.Context, key cache.Key) (interface{}, error) {
+		return false, errors.New("error here")
 	}
-	return
+	mockCache = memory.NewCache(
+		"mockCache", false, retrieveFunc, expiration, nil)
+	releaseHistoryCache = mockCache
+
+	_, err = GetReleaseHistory(context.Background(), 1)
+	assert.Error(t, err)
 }

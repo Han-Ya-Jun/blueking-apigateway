@@ -19,47 +19,44 @@
 package microgateway
 
 import (
-	"database/sql"
-	"errors"
-
 	"github.com/gin-gonic/gin"
+	"github.com/spf13/cast"
 
 	"core/pkg/service"
 	"core/pkg/util"
 )
 
-type queryPublicKeySerializer struct {
-	BkGatewayName string `form:"bk_gateway_name" binding:"required" example:"benchmark"`
+type reportPublishEventSerializer struct {
+	Gateway string                 `json:"gateway" binding:"required" example:"benchmark"`
+	Stage   string                 `json:"stage"  binding:"required" example:"dev"`
+	Name    string                 `json:"name"  binding:"required" example:"generate_release_task"`
+	Status  string                 `json:"status" binding:"required" example:"success" `
+	Detail  map[string]interface{} `json:"detail"`
 }
 
-// QueryPublicKey will query the public key for gateway from database
-func QueryPublicKey(c *gin.Context) {
-	// query params: bk_gateway_name
-	// response body:
-	// {
-	//     "data": {
-	//        "public_key": ""
-	//     }
-	// }
-
-	var query queryPublicKeySerializer
-	if err := c.ShouldBindQuery(&query); err != nil {
+// ReportPublishEvent report publish event
+func ReportPublishEvent(c *gin.Context) {
+	var query reportPublishEventSerializer
+	if err := c.ShouldBindJSON(&query); err != nil {
 		util.BadRequestErrorJSONResponse(c, util.ValidationErrorMessage(err))
 		return
 	}
-
-	svc := service.NewGatewayPublicKeyService()
-	publicKey, err := svc.Get(c.Request.Context(), util.GetInstanceID(c), query.BkGatewayName)
+	svc := service.NewPublishEventService()
+	publishID := cast.ToInt64(c.Param("publish_id"))
+	event := service.Event{
+		Gateway:   query.Gateway,
+		Stage:     query.Stage,
+		Name:      query.Name,
+		Status:    query.Status,
+		PublishID: publishID,
+		DetailMap: query.Detail,
+	}
+	err := svc.Report(c.Request.Context(), event)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			util.NotFoundJSONResponse(c, err.Error())
-			return
-		} else {
-			util.SystemErrorJSONResponse(c, err)
-			return
-		}
+		util.SystemErrorJSONResponse(c, err)
+		return
 	}
 	util.SuccessJSONResponse(c, gin.H{
-		"public_key": publicKey,
+		"result": "report success",
 	})
 }

@@ -26,34 +26,28 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 
+	"core/pkg/constant"
 	"core/pkg/database"
 )
 
-func Test_microGatewayManager_Get(t *testing.T) {
+func Test_publishEventManager_Create(t *testing.T) {
 	database.RunWithMock(t, func(db *sqlx.DB, mock sqlmock.Sqlmock, t *testing.T) {
-		mockQuery := `^SELECT id, api_id, is_shared, is_managed, config FROM core_micro_gateway`
-
-		instanceID := "instanceID"
-
-		record := MicroGateway{
-			ID:        "uuid",
-			GatewayID: 1,
-			IsShared:  true,
-			IsManaged: true,
-			Config:    "{}",
+		mockQuery := `^INSERT INTO core_publish_event`
+		record := PublishEvent{
+			GatewayID: 67,
+			PublishID: 89,
+			StageID:   12,
+			Name:      constant.EventNameApplyConfiguration,
+			Step:      1,
+			Status:    constant.EventStatusSuccess,
+			Detail:    map[string]interface{}{"err_msg": "success"},
 		}
+		mock.ExpectExec(mockQuery).WillReturnResult(
+			sqlmock.NewResult(1, 1))
 
-		mockData := []interface{}{
-			record,
-		}
-		mockRows := database.NewMockRows(mock, mockData...)
-
-		mock.ExpectQuery(mockQuery).WithArgs(instanceID).WillReturnRows(mockRows)
-
-		manager := &microGatewayManager{DB: db}
-		p, err := manager.Get(context.Background(), instanceID)
-
-		assert.NoError(t, err, "query from db fail.")
-		assert.Equal(t, record, p)
+		manager := &publishEventManager{DB: db}
+		result, err := manager.Create(context.Background(), record)
+		assert.NoError(t, err, "insert db fail.")
+		assert.Equal(t, result, int64(1))
 	})
 }

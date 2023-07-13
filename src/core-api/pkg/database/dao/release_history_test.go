@@ -21,6 +21,7 @@ package dao
 import (
 	"context"
 	"testing"
+	"time"
 
 	sqlmock "github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"
@@ -29,31 +30,33 @@ import (
 	"core/pkg/database"
 )
 
-func Test_microGatewayManager_Get(t *testing.T) {
+func Test_releaseHistoryManager_Get(t *testing.T) {
 	database.RunWithMock(t, func(db *sqlx.DB, mock sqlmock.Sqlmock, t *testing.T) {
-		mockQuery := `^SELECT id, api_id, is_shared, is_managed, config FROM core_micro_gateway`
-
-		instanceID := "instanceID"
-
-		record := MicroGateway{
-			ID:        "uuid",
-			GatewayID: 1,
-			IsShared:  true,
-			IsManaged: true,
-			Config:    "{}",
+		mockQuery := `^SELECT 
+				         stage_id,
+                         api_id,
+                         created_time,
+				         updated_time 
+			         FROM core_publish_event 
+			         WHERE id = ?`
+		publishID := 16
+		record := ReleaseHistory{
+			ID:                16,
+			CreatedTime:       time.Time{},
+			UpdatedTime:       time.Time{},
+			GatewayID:         23,
+			ResourceVersionID: 23,
+			StageID:           23,
 		}
-
 		mockData := []interface{}{
 			record,
 		}
 		mockRows := database.NewMockRows(mock, mockData...)
+		mock.ExpectQuery(mockQuery).WithArgs(publishID).WillReturnRows(mockRows)
 
-		mock.ExpectQuery(mockQuery).WithArgs(instanceID).WillReturnRows(mockRows)
-
-		manager := &microGatewayManager{DB: db}
-		p, err := manager.Get(context.Background(), instanceID)
-
+		manager := &releaseHistoryManager{DB: db}
+		p, err := manager.Get(context.Background(), int64(publishID))
 		assert.NoError(t, err, "query from db fail.")
-		assert.Equal(t, record, p)
+		assert.Equal(t, record.ID, p.ID)
 	})
 }
