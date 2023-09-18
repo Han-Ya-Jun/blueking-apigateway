@@ -3,7 +3,7 @@ import os
 import sys
 
 if __name__ == "__main__":
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "apigateway.settings")
+    os.environ.setdefault("2DJANGO_SETTINGS_MODULE", "apigateway.settings")
     import django
 
     django.setup()
