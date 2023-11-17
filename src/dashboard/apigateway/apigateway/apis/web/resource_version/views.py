@@ -53,7 +53,7 @@ from .serializers import (
         manual_parameters=[
             # 定义一个名为 "query" 的查询参数，默认值为 "None"
             parameters.Parameter(
-                name="query",
+                name="keyword",
                 in_=parameters.IN_QUERY,
                 type=parameters.TYPE_STRING,
                 description="资源版本(支模糊持匹配)",
@@ -79,7 +79,7 @@ class ResourceVersionListCreateApi(generics.ListCreateAPIView):
     def list(self, request, *args, **kwargs):
         slz = ResourceVersionListInputSLZ(data=request.query_params)
         slz.is_valid(raise_exception=True)
-        query = slz.validated_data.get("query")
+        query = slz.validated_data.get("keyword")
         queryset = ResourceVersion.objects.filter(gateway=request.gateway)
         if query:
             queryset = queryset.filter(version__icontains=query)
