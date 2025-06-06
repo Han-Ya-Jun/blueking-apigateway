@@ -101,7 +101,14 @@ func BkGatewayJWTAuthMiddleware() func(c *gin.Context) {
 		util.SetBkUsername(c, claims.User.Username)
 
 		// sign inner jwt
-		err = SignBkInnerJWTToken(c, claims, []byte(jwtInfo.PrivateKey))
+		decodePrivateKey, err := util.AESGCMDecrypt(
+			config.G.McpServer.EncryptKey, config.G.McpServer.CryptoNonce, jwtInfo.EncryptedPrivateKey)
+		if err != nil {
+			util.SystemErrorJSONResponse(c, err)
+			c.Abort()
+			return
+		}
+		err = SignBkInnerJWTToken(c, claims, decodePrivateKey)
 		if err != nil {
 			util.SystemErrorJSONResponse(c, err)
 			c.Abort()
@@ -187,7 +194,7 @@ func verifyJWTToken(claims *CustomClaims) error {
 	if claims.User.Username == "" {
 		return ErrAPIGatewayJWTUserInfoNoUsername
 	}
-	if claims.User.Verified {
+	if !claims.User.Verified {
 		return ErrAPIGatewayJWTUserNotVerified
 	}
 
