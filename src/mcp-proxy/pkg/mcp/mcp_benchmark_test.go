@@ -190,6 +190,7 @@ func BenchmarkAddMCPServerFromOpenAPISpec(b *testing.B) {
 				p := proxy.NewMCPProxy("", "")
 				_ = p.AddMCPServerFromOpenAPISpec(
 					"bench-server", 1, spec, ops, nil, constant.MCPServerProtocolTypeSSE,
+				false,
 				)
 			}
 		})
@@ -208,6 +209,7 @@ func BenchmarkAddMCPServerFromOpenAPISpec_StreamableHTTP(b *testing.B) {
 				p := proxy.NewMCPProxy("", "")
 				_ = p.AddMCPServerFromOpenAPISpec(
 					"bench-server", 1, spec, ops, nil, constant.MCPServerProtocolTypeStreamableHTTP,
+				false,
 				)
 			}
 		})
@@ -386,6 +388,7 @@ func BenchmarkAddMultipleServers(b *testing.B) {
 				for j := 0; j < numServers; j++ {
 					_ = p.AddMCPServerFromOpenAPISpec(
 						fmt.Sprintf("server_%d", j), 1, spec, ops, nil, constant.MCPServerProtocolTypeSSE,
+					false,
 					)
 				}
 			}
@@ -411,6 +414,7 @@ func BenchmarkAddMCPServerWithToolNameMap(b *testing.B) {
 				p := proxy.NewMCPProxy("", "")
 				_ = p.AddMCPServerFromOpenAPISpec(
 					"bench-server", 1, spec, ops, toolNameMap, constant.MCPServerProtocolTypeSSE,
+				false,
 				)
 			}
 		})
