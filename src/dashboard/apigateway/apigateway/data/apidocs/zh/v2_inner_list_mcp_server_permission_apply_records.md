@@ -30,7 +30,12 @@ mcp_server 申请记录列表
         "title": "测试服务",
         "description": "test",
         "tools_count": "1",
-        "doc_link": ""
+        "tool_names": ["tool1"],
+        "protocol_type": "sse",
+        "doc_link": "",
+        "categories": [
+          {"id": 1, "name": "Official", "display_name": "官方资源"}
+        ]
       },
       "record": {
         "id": 1,
@@ -65,14 +70,25 @@ mcp_server 申请记录列表
 
 #### data.mcp_server
 
-| 参数名称            | 参数类型   | 描述                   |
-|-----------------|--------|----------------------|
-| id              | int    | mcp_server ID        |
-| name            | string | mcp_server 名称        |
-| title           | string | mcp_server 中文名/显示名称  |
-| description     | string | mcp_server 描述        |
-| tools_count     | int    | mcp_server 工具数量      |
-| doc_link        | string | mcp_server 文档访问地址    |
+| 参数名称         | 参数类型   | 描述                    |
+|--------------|--------|-----------------------|
+| id           | int    | mcp_server ID         |
+| name         | string | mcp_server 名称         |
+| title        | string | mcp_server 中文名/显示名称   |
+| description  | string | mcp_server 描述         |
+| tools_count  | int    | mcp_server 工具数量       |
+| tool_names   | array  | mcp_server 工具名称列表     |
+| protocol_type | string | MCPServer 协议类型        |
+| doc_link     | string | mcp_server 文档访问地址     |
+| categories   | array  | MCPServer 分类列表，每项包含 id、name（英文标识）和 display_name（显示名称） |
+
+#### data.mcp_server.categories
+
+| 参数名称        | 参数类型   | 描述         |
+|-------------|--------|------------|
+| id          | int    | 分类 ID      |
+| name        | string | 分类名称（英文标识） |
+| display_name | string | 分类显示名称     |
 
 
 #### data.record

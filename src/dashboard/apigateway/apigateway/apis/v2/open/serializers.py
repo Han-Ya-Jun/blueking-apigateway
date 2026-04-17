@@ -215,6 +215,8 @@ class MCPServerBaseOutputSLZ(serializers.Serializer):
         read_only=True, help_text="是否开启 OAuth2 公开客户端模式，开启后将会对 bk_app_code=public 的应用进行授权"
     )
 
+    categories = serializers.SerializerMethodField(help_text="MCPServer 分类列表")
+
     stage = serializers.SerializerMethodField(help_text="MCPServer 环境")
     gateway = serializers.SerializerMethodField(help_text="MCPServer 网关")
 
@@ -232,6 +234,15 @@ class MCPServerBaseOutputSLZ(serializers.Serializer):
 
     def get_gateway(self, obj) -> Dict[str, Any]:
         return self.context["gateways"][obj.gateway.id]
+
+    def get_categories(self, obj):
+        """获取分类信息，利用预加载的数据避免 N+1 查询"""
+        categories = obj.categories.all()
+        active_categories = sorted(
+            (cat for cat in categories if cat.is_active),
+            key=lambda cat: cat.sort_order,
+        )
+        return [{"id": cat.id, "name": cat.name, "display_name": cat.display_name} for cat in active_categories]
 
     def get_url(self, obj) -> str:
         return build_mcp_server_url(obj.name, obj.protocol_type)

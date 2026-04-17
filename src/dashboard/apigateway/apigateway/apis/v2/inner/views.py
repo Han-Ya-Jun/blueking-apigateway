@@ -599,10 +599,14 @@ class MCPServerAppPermissionListApi(generics.ListAPIView):
         slz = self.get_serializer(data=request.query_params)
         slz.is_valid(raise_exception=True)
 
-        queryset = MCPServerAppPermissionApply.objects.filter(
-            bk_app_code=slz.validated_data["target_app_code"],
-            status__in=[MCPServerAppPermissionApplyStatusEnum.APPROVED.value],
-        ).order_by("-applied_time")
+        queryset = (
+            MCPServerAppPermissionApply.objects.filter(
+                bk_app_code=slz.validated_data["target_app_code"],
+                status__in=[MCPServerAppPermissionApplyStatusEnum.APPROVED.value],
+            )
+            .select_related("mcp_server")
+            .order_by("-applied_time")
+        )
 
         mcp_server_permissions = [
             {
@@ -614,6 +618,10 @@ class MCPServerAppPermissionListApi(generics.ListAPIView):
                     "tools_count": obj.mcp_server.tools_count,
                     "tool_names": obj.mcp_server.tool_names,
                     "protocol_type": obj.mcp_server.protocol_type,
+                    "categories": [
+                        {"id": cat.id, "name": cat.name, "display_name": cat.display_name}
+                        for cat in obj.mcp_server.categories.filter(is_active=True).order_by("sort_order")
+                    ],
                 },
                 "permission": {
                     "status": MCPServerPermissionStatusEnum.OWNED.value,
@@ -785,7 +793,7 @@ class MCPServerListApi(generics.ListAPIView):
             order_by=slz.validated_data.get("order_by", "-updated_time"),
         )
 
-        page = self.paginate_queryset(queryset)
+        page = self.paginate_queryset(queryset.prefetch_related("categories"))
         context = build_mcp_server_list_context(page)
 
         mcp_server_ids = [mcp_server.id for mcp_server in page]

@@ -30,7 +30,7 @@ from typing import Any, Dict, Optional, Sequence
 
 from django.db.models import QuerySet
 
-from apigateway.apps.mcp_server.models import MCPServer, MCPServerCategory
+from apigateway.apps.mcp_server.models import MCPServer
 from apigateway.biz.mcp_server import MCPServerHandler
 
 

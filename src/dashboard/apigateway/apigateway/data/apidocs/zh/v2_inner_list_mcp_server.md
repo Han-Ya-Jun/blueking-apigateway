@@ -34,6 +34,9 @@
         "status": "active",
         "protocol_type": "sse",
         "oauth2_public_client_enabled": false,
+        "categories": [
+          {"id": 1, "name": "Official", "display_name": "官方资源"}
+        ],
         "stage": {
           "id": 1,
           "name": "prod"
@@ -88,6 +91,7 @@
 | status       | string | MCPServer 状态          |
 | protocol_type | string | MCPServer 协议类型        |
 | oauth2_public_client_enabled | bool   | 是否开启 OAuth2 公开客户端模式，开启后将会对 bk_app_code=public 的应用进行授权       |
+| categories   | array  | MCPServer 分类列表，每项包含 id、name（英文标识）和 display_name（显示名称） |
 | stage        | object | MCPServer 环境信息        |
 | gateway      | object | MCPServer 网关信息        |
 | tools_count  | int    | MCPServer 工具数量        |
@@ -114,3 +118,11 @@
 | name        | string | 网关名称     |
 | maintainers | array  | 网关维护者列表  |
 | is_official | bool   | 是否为官方网关  |
+
+#### data.results.categories
+
+| 参数名称       | 参数类型   | 描述         |
+|------------|--------|------------|
+| id         | int    | 分类 ID      |
+| name       | string | 分类名称（英文标识） |
+| display_name | string | 分类显示名称     |

@@ -857,6 +857,11 @@ class MCPServerSLZ(ExtensibleFieldMixin, serializers.ModelSerializer):
         default=False,
         help_text="是否开启 OAuth2 公开客户端模式，开启后将会对 bk_app_code=public 的应用进行授权",
     )
+    raw_response = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text="是否返回原始响应，开启后工具调用将直接返回 API 原始响应，不再包装 request_id/status_code 等字段",
+    )
     category_names = serializers.ListField(
         child=serializers.CharField(),
         required=False,
@@ -879,6 +884,7 @@ class MCPServerSLZ(ExtensibleFieldMixin, serializers.ModelSerializer):
             "protocol_type",
             "target_app_codes",
             "oauth2_public_client_enabled",
+            "raw_response",
             "category_names",
         )
         lookup_field = "id"

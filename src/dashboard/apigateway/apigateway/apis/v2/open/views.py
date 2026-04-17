@@ -272,7 +272,7 @@ class MCPServerListApi(generics.ListAPIView):
             is_public=True,
         )
 
-        page = self.paginate_queryset(queryset)
+        page = self.paginate_queryset(queryset.prefetch_related("categories"))
         context = build_mcp_server_list_context(page)
 
         output_slz = MCPServerListOutputSLZ(page, many=True, context=context)
@@ -468,7 +468,7 @@ class UserMCPServerListApi(generics.ListAPIView):
             )
 
         # optimize query by using select_related
-        queryset = queryset.select_related("gateway", "stage")
+        queryset = queryset.select_related("gateway", "stage").prefetch_related("categories")
 
         # note: the stage offline will update related mcp server status to inactive,
         # the stage publish will update the mcp server resource_names,
