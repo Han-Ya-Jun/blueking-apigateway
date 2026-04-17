@@ -106,17 +106,19 @@ func (m *MCPProxy) AddMCPServerFromConfigs(configs []*MCPServerConfig) error {
 			httpHandler := mcp.NewStreamableHTTPHandler(func(r *http.Request) *mcp.Server {
 				return server
 			}, nil)
-			mcpServer = NewStreamableHTTPMCPServer(server, httpHandler, config.Name, config.ResourceVersionID)
+			mcpServer = NewStreamableHTTPMCPServer(server, httpHandler, config.Name, config.ResourceVersionID, config.RawResponse)
 		} else {
 			// 默认使用 SSE Handler
 			sseHandler := mcp.NewSSEHandler(func(r *http.Request) *mcp.Server {
 				return server
 			}, nil)
-			mcpServer = NewMCPServer(server, sseHandler, config.Name, config.ResourceVersionID)
+			mcpServer = NewMCPServer(server, sseHandler, config.Name, config.ResourceVersionID, config.RawResponse)
 		}
 
 		// register tool
 		for _, toolConfig := range config.Tools {
+			// 将 MCPServerConfig 的 RawResponse 传递到 ToolConfig
+			toolConfig.RawResponse = config.RawResponse
 			schemaBytes, err := toolConfig.ParamSchema.JSONSchemaBytes()
 			if err != nil {
 				logging.GetLogger().Error("failed to convert ParamSchema to JSON schema bytes",
@@ -173,7 +175,7 @@ func (m *MCPProxy) AddMCPServerFromConfigs(configs []*MCPServerConfig) error {
 // toolNameMap: 资源名到工具名的映射，如果为 nil 则使用资源名作为工具名
 func (m *MCPProxy) AddMCPServerFromOpenAPISpec(name string,
 	resourceVersionID int, openAPISpec *openapi3.T, operationIDList []string,
-	toolNameMap map[string]string, protocolType string,
+	toolNameMap map[string]string, protocolType string, rawResponse bool,
 ) error {
 	operationIDMap := make(map[string]struct{})
 	for _, operationID := range operationIDList {
@@ -184,6 +186,7 @@ func (m *MCPProxy) AddMCPServerFromOpenAPISpec(name string,
 		Tools:             OpenapiToMcpToolConfig(openAPISpec, operationIDMap, toolNameMap),
 		ResourceVersionID: resourceVersionID,
 		ProtocolType:      protocolType,
+		RawResponse:       rawResponse,
 	}
 	return m.AddMCPServerFromConfigs([]*MCPServerConfig{mcpServerConfig})
 }
@@ -200,11 +203,13 @@ func (m *MCPProxy) UpdateMCPServerFromOpenApiSpec(
 		operationIDMap[operationID] = struct{}{}
 	}
 	mcpServerConfig := &MCPServerConfig{
-		Name:  name,
-		Tools: OpenapiToMcpToolConfig(openAPISpec, operationIDMap, toolNameMap),
+		Name:        name,
+		Tools:       OpenapiToMcpToolConfig(openAPISpec, operationIDMap, toolNameMap),
+		RawResponse: mcpServer.IsRawResponse(),
 	}
 	// update tool
 	for _, toolConfig := range mcpServerConfig.Tools {
+		toolConfig.RawResponse = mcpServerConfig.RawResponse
 		schemaBytes, err := toolConfig.ParamSchema.JSONSchemaBytes()
 		if err != nil {
 			logging.GetLogger().Error("failed to convert ParamSchema to JSON schema bytes",
@@ -556,6 +561,18 @@ func genToolHandler(toolApiConfig *ToolConfig) ToolHandler {
 				func(response runtime.ClientResponse, consumer runtime.Consumer) (any, error) {
 					if response.Body() != nil {
 						defer response.Body().Close()
+					}
+					// raw_response 模式：直接返回 API 原始响应，不包装信封
+					if toolApiConfig.RawResponse {
+						var res map[string]any
+						if e := consumer.Consume(response.Body(), &res); e != nil {
+							return nil, e
+						}
+						if response.Code() < 200 || response.Code() > 299 {
+							return nil, runtime.NewAPIError("call tool err", res, response.Code())
+						}
+						rawResult, _ := json.Marshal(res)
+						return string(rawResult), nil
 					}
 					responseResult := map[string]any{
 						"status_code": response.Code(),

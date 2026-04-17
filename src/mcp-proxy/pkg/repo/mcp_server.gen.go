@@ -55,6 +55,8 @@ func newMCPServer(db *gorm.DB, opts ...gen.DOOption) mCPServer {
 	_mCPServer.Status = field.NewInt(tableName, "status")
 	_mCPServer.GatewayID = field.NewInt(tableName, "gateway_id")
 	_mCPServer.StageID = field.NewInt(tableName, "stage_id")
+	_mCPServer.ProtocolType = field.NewString(tableName, "protocol_type")
+	_mCPServer.RawResponse = field.NewBool(tableName, "raw_response")
 
 	_mCPServer.fillFieldMap()
 
@@ -74,6 +76,8 @@ type mCPServer struct {
 	Status        field.Int
 	GatewayID     field.Int
 	StageID       field.Int
+	ProtocolType  field.String
+	RawResponse   field.Bool
 
 	fieldMap map[string]field.Expr
 }
@@ -99,6 +103,8 @@ func (m *mCPServer) updateTableName(table string) *mCPServer {
 	m.Status = field.NewInt(table, "status")
 	m.GatewayID = field.NewInt(table, "gateway_id")
 	m.StageID = field.NewInt(table, "stage_id")
+	m.ProtocolType = field.NewString(table, "protocol_type")
+	m.RawResponse = field.NewBool(table, "raw_response")
 
 	m.fillFieldMap()
 
@@ -125,7 +131,7 @@ func (m *mCPServer) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (m *mCPServer) fillFieldMap() {
-	m.fieldMap = make(map[string]field.Expr, 9)
+	m.fieldMap = make(map[string]field.Expr, 11)
 	m.fieldMap["id"] = m.ID
 	m.fieldMap["name"] = m.Name
 	m.fieldMap["description"] = m.Description
@@ -135,6 +141,8 @@ func (m *mCPServer) fillFieldMap() {
 	m.fieldMap["status"] = m.Status
 	m.fieldMap["gateway_id"] = m.GatewayID
 	m.fieldMap["stage_id"] = m.StageID
+	m.fieldMap["protocol_type"] = m.ProtocolType
+	m.fieldMap["raw_response"] = m.RawResponse
 }
 
 func (m mCPServer) clone(db *gorm.DB) mCPServer {

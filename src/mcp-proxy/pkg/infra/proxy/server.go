@@ -43,6 +43,7 @@ type MCPServer struct {
 	name                  string
 	// 生效的资源版本号
 	resourceVersionID int
+	rawResponse       bool // 是否返回原始响应，不包装 request_id/status_code 等字段
 	tools             map[string]struct{}
 	prompts           map[string]struct{}
 	rwLock            *sync.RWMutex
@@ -54,6 +55,7 @@ func NewMCPServer(
 	handler *mcp.SSEHandler,
 	name string,
 	resourceVersion int,
+	rawResponse bool,
 ) *MCPServer {
 	return &MCPServer{
 		Server:            server,
@@ -64,6 +66,7 @@ func NewMCPServer(
 		rwLock:            &sync.RWMutex{},
 		name:              name,
 		resourceVersionID: resourceVersion,
+		rawResponse:       rawResponse,
 	}
 }
 
@@ -73,6 +76,7 @@ func NewStreamableHTTPMCPServer(
 	handler *mcp.StreamableHTTPHandler,
 	name string,
 	resourceVersion int,
+	rawResponse bool,
 ) *MCPServer {
 	return &MCPServer{
 		Server:                server,
@@ -83,7 +87,13 @@ func NewStreamableHTTPMCPServer(
 		rwLock:                &sync.RWMutex{},
 		name:                  name,
 		resourceVersionID:     resourceVersion,
+		rawResponse:           rawResponse,
 	}
+}
+
+// IsRawResponse 返回是否使用原始响应模式
+func (s *MCPServer) IsRawResponse() bool {
+	return s.rawResponse
 }
 
 // GetProtocolType 获取协议类型

@@ -86,7 +86,17 @@ def build_mcp_server_list_context(mcp_servers: Sequence[MCPServer]) -> Dict[str,
         for s in Stage.objects.filter(id__in=stage_ids)
     }
 
-    return {"gateways": gateways, "stages": stages}
+    # 构建 categories 数据：mcp_server_id -> [{name, display_name}, ...]
+    mcp_server_ids = [ms.id for ms in mcp_servers]
+
+    categories_map: Dict[int, list] = {}
+    mcp_servers_with_categories = MCPServer.objects.filter(id__in=mcp_server_ids).prefetch_related("categories")
+    for ms in mcp_servers_with_categories:
+        categories_map[ms.id] = [
+            {"name": cat.name, "display_name": cat.display_name} for cat in ms.categories.all() if cat.is_active
+        ]
+
+    return {"gateways": gateways, "stages": stages, "categories": categories_map}
 
 
 def validate_and_enrich_mcp_server_for_retrieve(
@@ -142,9 +152,14 @@ def validate_and_enrich_mcp_server_for_retrieve(
     prompts = MCPServerHandler.get_prompts(instance.id)
     user_custom_doc = MCPServerHandler.get_user_custom_doc(instance.id)
 
+    categories = [
+        {"name": cat.name, "display_name": cat.display_name} for cat in instance.categories.filter(is_active=True)
+    ]
+
     return {
         "labels": labels,
         "prompts_count_map": prompts_count_map,
         "prompts": prompts,
         "user_custom_doc": user_custom_doc,
+        "categories": categories,
     }

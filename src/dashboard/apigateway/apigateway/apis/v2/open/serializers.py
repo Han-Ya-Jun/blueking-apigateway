@@ -215,6 +215,13 @@ class MCPServerBaseOutputSLZ(serializers.Serializer):
         read_only=True, help_text="是否开启 OAuth2 公开客户端模式，开启后将会对 bk_app_code=public 的应用进行授权"
     )
 
+    raw_response = serializers.BooleanField(
+        read_only=True,
+        help_text="是否返回原始响应，开启后工具调用将直接返回 API 原始响应，不再包装 request_id/status_code 等字段",
+    )
+
+    categories = serializers.SerializerMethodField(help_text="MCPServer 分类列表")
+
     stage = serializers.SerializerMethodField(help_text="MCPServer 环境")
     gateway = serializers.SerializerMethodField(help_text="MCPServer 网关")
 
@@ -238,6 +245,9 @@ class MCPServerBaseOutputSLZ(serializers.Serializer):
 
     def get_detail_url(self, obj) -> str:
         return build_mcp_server_detail_url(obj.id)
+
+    def get_categories(self, obj) -> list:
+        return self.context.get("categories", {}).get(obj.id, [])
 
     class Meta:
         ref_name = "apigateway.apis.v2.open.serializers.MCPServerBaseOutputSLZ"

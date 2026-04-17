@@ -357,6 +357,7 @@ class MCPServerBaseSLZ(serializers.Serializer):
         help_text="MCPServer 协议类型",
         choices=MCPServerProtocolTypeEnum.get_choices(),
     )
+    categories = serializers.SerializerMethodField(help_text="MCPServer 分类列表")
 
     def get_title(self, obj) -> str:
         title = obj.get("title", "") if isinstance(obj, dict) else getattr(obj, "title", "")
@@ -366,6 +367,9 @@ class MCPServerBaseSLZ(serializers.Serializer):
     def get_doc_link(self, obj):
         obj_id = obj.get("id") if isinstance(obj, dict) else obj.id
         return build_mcp_server_detail_url(obj_id)
+
+    def get_categories(self, obj) -> list:
+        return self.context.get("categories", {}).get(obj.get("id") if isinstance(obj, dict) else obj.id, [])
 
     class Meta:
         ref_name = "apigateway.apis.v2.inner.serializers.MCPServerBaseSLZ"
@@ -567,6 +571,11 @@ class MCPServerListOutputSLZ(serializers.Serializer):
         read_only=True, help_text="是否开启 OAuth2 公开客户端模式，开启后将会对 bk_app_code=public 的应用进行授权"
     )
 
+    raw_response = serializers.BooleanField(
+        read_only=True,
+        help_text="是否返回原始响应，开启后工具调用将直接返回 API 原始响应，不再包装 request_id/status_code 等字段",
+    )
+
     stage = serializers.SerializerMethodField(help_text="MCPServer 环境")
     gateway = serializers.SerializerMethodField(help_text="MCPServer 网关")
 
@@ -579,6 +588,8 @@ class MCPServerListOutputSLZ(serializers.Serializer):
     created_by = serializers.CharField(read_only=True, help_text="创建人")
     updated_time = serializers.DateTimeField(read_only=True, help_text="更新时间")
     created_time = serializers.DateTimeField(read_only=True, help_text="创建时间")
+
+    categories = serializers.SerializerMethodField(help_text="MCPServer 分类列表")
 
     def get_title(self, obj) -> str:
         return obj.title if obj.title else obj.name
@@ -598,6 +609,9 @@ class MCPServerListOutputSLZ(serializers.Serializer):
     def get_prompts_count(self, obj) -> int:
         prompts_count_map = self.context.get("prompts_count_map", {})
         return prompts_count_map.get(obj.id, 0)
+
+    def get_categories(self, obj) -> list:
+        return self.context.get("categories", {}).get(obj.id, [])
 
     class Meta:
         ref_name = "apigateway.apis.v2.inner.serializers.MCPServerListOutputSLZ"
