@@ -292,15 +292,17 @@ class TestSwaggerParserCollectUnsafeRefPaths:
 
     def test_unsafe_ref(self):
         node = {"$ref": "http://evil.com/payload"}
-        assert SwaggerParser._collect_unsafe_ref_paths(node) == ["$.$ref"]
+        assert SwaggerParser._collect_unsafe_ref_paths(node) == ['$["$ref"]']
 
     def test_nested_unsafe_ref(self):
         node = {"paths": {"/test": {"get": {"responses": {"200": {"schema": {"$ref": "/etc/shadow"}}}}}}}
-        assert SwaggerParser._collect_unsafe_ref_paths(node) == ["$.paths./test.get.responses.200.schema.$ref"]
+        assert SwaggerParser._collect_unsafe_ref_paths(node) == [
+            '$["paths"]["/test"]["get"]["responses"]["200"]["schema"]["$ref"]'
+        ]
 
     def test_list_with_unsafe_ref(self):
         node = [{"$ref": "#/definitions/OK"}, {"$ref": "http://bad.com/x"}]
-        assert SwaggerParser._collect_unsafe_ref_paths(node) == ["$[1].$ref"]
+        assert SwaggerParser._collect_unsafe_ref_paths(node) == ['$[1]["$ref"]']
 
     def test_multiple_unsafe_refs(self):
         node = {
@@ -309,6 +311,14 @@ class TestSwaggerParserCollectUnsafeRefPaths:
             "c": {"$ref": "#/definitions/Safe"},
         }
         result = SwaggerParser._collect_unsafe_ref_paths(node)
-        assert "$.a.$ref" in result
-        assert "$.b.$ref" in result
+        assert '$["a"]["$ref"]' in result
+        assert '$["b"]["$ref"]' in result
         assert len(result) == 2
+
+    def test_xss_like_key_is_escaped_in_path(self):
+        """恶意 HTML key 不应原样出现在返回路径中"""
+        node = {"<img src=x onerror=alert(1)>": {"$ref": "http://evil.com/x"}}
+        result = SwaggerParser._collect_unsafe_ref_paths(node)
+        assert len(result) == 1
+        assert "<img" not in result[0]
+        assert "\\u003cimg" in result[0]

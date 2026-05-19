@@ -234,10 +234,18 @@ class SwaggerParser(BaseParser):
 
         if unsafe_ref_paths:
             raise UnsafeSwaggerRefError(
-                _("swagger 中包含不允许的外部 $ref 引用，位置：{paths}").format(
-                    paths=", ".join(unsafe_ref_paths[:5])
-                )
+                _("swagger 中包含不允许的外部 $ref 引用，位置：{paths}").format(paths=", ".join(unsafe_ref_paths[:5]))
             )
+
+    @staticmethod
+    def _escape_json_path_key(key: Any) -> str:
+        """将 key 转义为安全的 JSON 字符串表示，防止 HTML 注入。"""
+        escaped = json.dumps(str(key), ensure_ascii=True)
+        return escaped.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026").replace("'", "\\u0027")
+
+    @staticmethod
+    def _append_json_path_key(path: str, key: Any) -> str:
+        return f"{path}[{SwaggerParser._escape_json_path_key(key)}]"
 
     @staticmethod
     def _collect_unsafe_ref_paths(node: Any, path: str = "$") -> List[str]:
@@ -248,11 +256,12 @@ class SwaggerParser(BaseParser):
         paths: List[str] = []
         if isinstance(node, dict):
             for key, value in node.items():
+                next_path = SwaggerParser._append_json_path_key(path, key)
                 if key == "$ref":
                     if isinstance(value, str) and not value.startswith("#"):
-                        paths.append(f"{path}.$ref")
+                        paths.append(next_path)
                 else:
-                    paths.extend(SwaggerParser._collect_unsafe_ref_paths(value, f"{path}.{key}"))
+                    paths.extend(SwaggerParser._collect_unsafe_ref_paths(value, next_path))
         elif isinstance(node, list):
             for i, item in enumerate(node):
                 paths.extend(SwaggerParser._collect_unsafe_ref_paths(item, f"{path}[{i}]"))
