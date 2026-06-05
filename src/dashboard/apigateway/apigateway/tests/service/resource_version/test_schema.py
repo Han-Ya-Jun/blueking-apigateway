@@ -18,8 +18,6 @@
 import json
 
 import pytest
-from ddf import G
-
 from apigateway.apps.openapi.models import OpenAPIResourceSchemaVersion
 from apigateway.core.models import ResourceVersion
 from apigateway.service.resource_version import (
@@ -29,6 +27,7 @@ from apigateway.service.resource_version import (
     get_used_stage_vars,
     make_resource_schema_version,
 )
+from ddf import G
 
 
 @pytest.fixture(autouse=True)

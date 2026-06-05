@@ -17,7 +17,6 @@
 # to the current version of the project delivered to anyone in the future.
 #
 import pytest
-
 from apigateway.biz.esb import SystemDocCategoryHandler
 
 pytestmark = pytest.mark.django_db
