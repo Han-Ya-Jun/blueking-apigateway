@@ -17,8 +17,6 @@
 #
 from unittest.mock import patch
 
-from ddf import G
-
 from apigateway.core.constants import (
     PublishEventNameTypeEnum,
     PublishEventStatusTypeEnum,
@@ -26,6 +24,7 @@ from apigateway.core.constants import (
 )
 from apigateway.core.models import PublishEvent
 from apigateway.service.release import wait_release_done
+from ddf import G
 
 
 class TestWaitReleaseDone:

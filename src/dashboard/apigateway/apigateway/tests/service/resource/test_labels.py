@@ -15,8 +15,6 @@
 # We undertake not to change the open source license (MIT license) applicable
 # to the current version of the project delivered to anyone in the future.
 #
-from ddf import G
-
 from apigateway.apps.label.models import APILabel, ResourceLabel
 from apigateway.service.resource import (
     ensure_gateway_labels,
@@ -24,6 +22,7 @@ from apigateway.service.resource import (
     get_resource_id_to_labels,
     get_resource_id_to_labels_by_label_ids,
 )
+from ddf import G
 
 
 def test_get_gateway_resource_id_to_labels(fake_resource):

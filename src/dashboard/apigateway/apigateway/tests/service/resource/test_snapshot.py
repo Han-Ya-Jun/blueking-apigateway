@@ -15,8 +15,6 @@
 # We undertake not to change the open source license (MIT license) applicable
 # to the current version of the project delivered to anyone in the future.
 #
-from ddf import G
-
 from apigateway.core.models import Resource, Stage, StageResourceDisabled
 from apigateway.service.resource import (
     filter_disabled_stages_by_gateway,
@@ -27,6 +25,7 @@ from apigateway.service.resource import (
     get_resource_use_stage_vars,
     snapshot_resource,
 )
+from ddf import G
 
 
 def test_filter_disabled_stages_by_gateway(fake_gateway):

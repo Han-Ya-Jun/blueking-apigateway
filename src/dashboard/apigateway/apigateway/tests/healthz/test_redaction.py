@@ -16,7 +16,6 @@
 # to the current version of the project delivered to anyone in the future.
 #
 import pytest
-
 from apigateway.healthz.views import CheckError, HealthzView
 from apigateway.tests.utils.testing import create_request, get_response_json
 
