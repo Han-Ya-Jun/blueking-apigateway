@@ -17,10 +17,9 @@
 #
 
 import pytest
-from rest_framework import serializers
-
 from apigateway.core.constants import GatewayStatusEnum
 from apigateway.service.release import PublishValidator, ReleaseValidationError, StageVarsValuesValidator
+from rest_framework import serializers
 
 
 def test_stage_vars_values_validator_uses_resource_version_stage_vars(mocker, fake_gateway):

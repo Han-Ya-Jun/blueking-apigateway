@@ -20,14 +20,13 @@ import datetime
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from django.db import transaction
-from django.utils.translation import gettext as _
-
 import apigateway.biz.release as release_biz
 from apigateway.apps.esb.bkcore.models import ComponentReleaseHistory
 from apigateway.biz.resource_version import ResourceVersionHandler
 from apigateway.core.constants import ReleaseStatusEnum
 from apigateway.core.models import Gateway, ResourceVersion, Stage
+from django.db import transaction
+from django.utils.translation import gettext as _
 
 
 @dataclass

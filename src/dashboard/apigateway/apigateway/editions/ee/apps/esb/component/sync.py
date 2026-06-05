@@ -18,8 +18,6 @@
 #
 from typing import Any, Dict, List
 
-from django.db import transaction
-
 from apigateway.apps.esb.component.convertor import ComponentConvertor
 
 # FIXME: 将 sync 中内容挪到 biz 模块，apps 模块不能引用 biz 模块内容
@@ -27,6 +25,7 @@ from apigateway.biz.esb import ComponentResourceBindingHandler
 from apigateway.biz.openapi import ResourceDataConvertor
 from apigateway.biz.resource.importer import ResourcesImporter
 from apigateway.core.models import Gateway
+from django.db import transaction
 
 
 class ComponentSynchronizer:
